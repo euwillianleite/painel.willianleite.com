@@ -12,7 +12,7 @@ export default function Privacidade() {
 
         <h2>Quem somos</h2>
         <p>
-          O painel {EMPRESA.nome} é uma ferramenta interna de gestão, de uso exclusivo do administrador da empresa
+          {EMPRESA.nome} é uma ferramenta interna de gestão, de uso exclusivo do administrador da empresa
           {EMPRESA.responsavel ? ` (${EMPRESA.responsavel})` : ""}. Não é aberta ao público e não há cadastro de outros usuários.
         </p>
 
