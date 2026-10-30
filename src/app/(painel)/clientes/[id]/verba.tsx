@@ -35,33 +35,31 @@ export async function VerbaMidia({ clientId }: { clientId: string }) {
   );
 
   return (
-    <div className="table-wrap">
-      <table>
-        <thead><tr><th>Conta</th><th className="num">Mês anterior</th><th className="num">Média 3 meses</th><th className="num">Total</th></tr></thead>
-        <tbody>
-          {linhas.map(({ c, r }) => {
-            const nome = `${c.platform === "meta_ads" ? "Meta" : "Google"} · ${c.name ?? c.external_id}`;
-            if (!r.ok) {
-              return (
-                <tr key={c.external_id}>
-                  <td>{nome}</td>
-                  <td colSpan={3} className="muted small">{r.faltando?.length ? "integração não configurada" : r.erro}</td>
-                </tr>
-              );
-            }
-            const s = resumirGasto(r.dados.meses, hoje);
-            const moeda = r.dados.moeda ?? c.currency;
-            return (
-              <tr key={c.external_id}>
-                <td>{nome}</td>
-                <td className="num">{fmt(s.mesAnterior, moeda)}</td>
-                <td className="num">{fmt(s.media3, moeda)}</td>
-                <td className="num">{fmt(s.total, moeda)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="verba-grid">
+      {linhas.map(({ c, r }) => {
+        const plataforma = c.platform === "meta_ads" ? "Meta Ads" : "Google Ads";
+        const nome = c.name ?? c.external_id;
+        if (!r.ok) {
+          return (
+            <section key={c.external_id} className="verba-col">
+              <header><span className="verba-plat">{plataforma}</span><strong>{nome}</strong></header>
+              <p className="muted small">{r.faltando?.length ? "Integração não configurada." : r.erro}</p>
+            </section>
+          );
+        }
+        const s = resumirGasto(r.dados.meses, hoje);
+        const moeda = r.dados.moeda ?? c.currency;
+        return (
+          <section key={c.external_id} className="verba-col">
+            <header><span className="verba-plat">{plataforma}</span><strong>{nome}</strong></header>
+            <dl>
+              <div><dt>Mês anterior</dt><dd>{fmt(s.mesAnterior, moeda)}</dd></div>
+              <div><dt>Média 3 meses</dt><dd>{fmt(s.media3, moeda)}</dd></div>
+              <div><dt>Total</dt><dd>{fmt(s.total, moeda)}</dd></div>
+            </dl>
+          </section>
+        );
+      })}
     </div>
   );
 }
