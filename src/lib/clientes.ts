@@ -11,9 +11,7 @@ export type Cliente = {
   status: "ativo" | "encerrado";
   billing_day: number | null;
   project_start: string | null;
-  project_end: string | null;
-  renewal_date: string | null;
-  contract_end: string | null;
+  contract_end: string | null; // término / renovação do contrato
   notes: string | null;
 };
 export type Link = { id: string; label: string; url: string };
@@ -30,15 +28,12 @@ export function valorVigente(valores: Valor[], mes: string): Valor | null {
 
 export type Alerta = { texto: string; tom: "aviso" | "perigo" } | null;
 
-/** Destaca renovação / fim de contrato nos próximos 30 dias (ou já vencidos). */
-export function alertaPrazo(c: Pick<Cliente, "status" | "renewal_date" | "contract_end">): Alerta {
-  if (c.status !== "ativo") return null;
-  const itens: { rotulo: string; dias: number }[] = [];
-  if (c.renewal_date) itens.push({ rotulo: "Renovação", dias: diasAte(c.renewal_date) });
-  if (c.contract_end) itens.push({ rotulo: "Fim do contrato", dias: diasAte(c.contract_end) });
-  const proximo = itens.filter((i) => i.dias <= 30).sort((a, b) => a.dias - b.dias)[0];
-  if (!proximo) return null;
-  if (proximo.dias < 0) return { texto: `${proximo.rotulo} vencida há ${-proximo.dias} d`, tom: "perigo" };
-  if (proximo.dias === 0) return { texto: `${proximo.rotulo} hoje`, tom: "perigo" };
-  return { texto: `${proximo.rotulo} em ${proximo.dias} d`, tom: "aviso" };
+/** Destaca o término/renovação do contrato nos próximos 30 dias (ou já vencido). */
+export function alertaPrazo(c: Pick<Cliente, "status" | "contract_end">): Alerta {
+  if (c.status !== "ativo" || !c.contract_end) return null;
+  const dias = diasAte(c.contract_end);
+  if (dias > 30) return null;
+  if (dias < 0) return { texto: `Renovação vencida há ${-dias} d`, tom: "perigo" };
+  if (dias === 0) return { texto: "Renova hoje", tom: "perigo" };
+  return { texto: `Renova em ${dias} d`, tom: "aviso" };
 }

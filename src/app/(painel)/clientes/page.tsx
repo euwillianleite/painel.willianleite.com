@@ -67,8 +67,7 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                 <th>Status</th>
                 <th className="num">Mensalidade</th>
                 <th>Início</th>
-                <th>Renovação</th>
-                <th>Fim do contrato</th>
+                <th>Término / renovação</th>
               </tr>
             </thead>
             <tbody>
@@ -84,7 +83,6 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                     <td><span className={`badge ${c.status}`}>{c.status === "ativo" ? "Ativo" : "Encerrado"}</span></td>
                     <td className="num">{v ? brl(v.amount) : "—"}</td>
                     <td>{dataBR(c.project_start)}</td>
-                    <td>{dataBR(c.renewal_date)}</td>
                     <td>{dataBR(c.contract_end)}</td>
                   </tr>
                 );

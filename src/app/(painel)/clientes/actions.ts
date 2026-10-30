@@ -18,6 +18,9 @@ const idDe = (f: FormData, k = "id") => {
 };
 const volta = (path: string, erro: string): never =>
   redirect(`${path}?erro=${encodeURIComponent(erro)}`);
+/** Mensagem + motivo técnico (painel de uso interno). */
+const motivo = (e: { code?: string; message?: string } | null) =>
+  e ? ` (${[e.code, e.message].filter(Boolean).join(": ")})` : "";
 
 /** type="month" envia "2026-10" -> "2026-10-01" */
 const mesInicio = (f: FormData, k: string) => {
@@ -37,8 +40,6 @@ function camposCliente(f: FormData) {
     status: txt(f, "status") === "encerrado" ? "encerrado" : "ativo",
     billing_day: Number.isInteger(dia) && dia >= 1 && dia <= 31 ? dia : null,
     project_start: data(f, "project_start"),
-    project_end: data(f, "project_end"),
-    renewal_date: data(f, "renewal_date"),
     contract_end: data(f, "contract_end"),
     notes: txt(f, "notes"),
   };
@@ -54,7 +55,7 @@ export async function criarCliente(f: FormData) {
 
   const supabase = await supabaseServer();
   const { data: cli, error } = await supabase.from("clients").insert(campos).select("id").single();
-  if (error || !cli) volta("/clientes/novo", "Não foi possível salvar o cliente.");
+  if (error || !cli) volta("/clientes/novo", `Não foi possível salvar o cliente.${motivo(error)}`);
 
   const { error: e2 } = await supabase
     .from("client_price_versions")
@@ -73,7 +74,7 @@ export async function atualizarCliente(f: FormData) {
     .from("clients")
     .update({ ...campos, updated_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) volta(`/clientes/${id}/editar`, "Não foi possível salvar.");
+  if (error) volta(`/clientes/${id}/editar`, `Não foi possível salvar.${motivo(error)}`);
   revalidatePath("/clientes");
   redirect(`/clientes/${id}`);
 }
@@ -91,7 +92,7 @@ export async function adicionarLink(f: FormData) {
   }
   const supabase = await supabaseServer();
   const { error } = await supabase.from("client_links").insert({ client_id: id, label, url });
-  if (error) volta(`/clientes/${id}`, "Não foi possível salvar o link.");
+  if (error) volta(`/clientes/${id}`, `Não foi possível salvar o link.${motivo(error)}`);
   revalidatePath(`/clientes/${id}`);
   redirect(`/clientes/${id}`);
 }
@@ -116,7 +117,7 @@ export async function novoValor(f: FormData) {
     .from("client_price_versions")
     .insert({ client_id: id, starts_on: inicio, amount: valor, note: txt(f, "note") });
   if (error?.code === "23505") volta(`/clientes/${id}`, "Já existe um valor começando nesse mês.");
-  if (error) volta(`/clientes/${id}`, "Não foi possível salvar o valor.");
+  if (error) volta(`/clientes/${id}`, `Não foi possível salvar o valor.${motivo(error)}`);
   revalidatePath("/clientes");
   redirect(`/clientes/${id}`);
 }

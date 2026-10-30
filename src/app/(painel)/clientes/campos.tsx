@@ -49,15 +49,7 @@ export function CamposCliente({ c }: { c?: Cliente }) {
           <input id="project_start" name="project_start" type="date" defaultValue={c?.project_start ?? ""} />
         </div>
         <div className="field">
-          <label htmlFor="project_end">Término do projeto</label>
-          <input id="project_end" name="project_end" type="date" defaultValue={c?.project_end ?? ""} />
-        </div>
-        <div className="field">
-          <label htmlFor="renewal_date">Renovação</label>
-          <input id="renewal_date" name="renewal_date" type="date" defaultValue={c?.renewal_date ?? ""} />
-        </div>
-        <div className="field">
-          <label htmlFor="contract_end">Fim do contrato</label>
+          <label htmlFor="contract_end">Término / renovação do contrato</label>
           <input id="contract_end" name="contract_end" type="date" defaultValue={c?.contract_end ?? ""} />
         </div>
       </div>

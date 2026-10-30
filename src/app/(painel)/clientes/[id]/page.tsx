@@ -75,9 +75,7 @@ export default async function Ficha({
             <dt>CNPJ / CPF</dt><dd>{c.document || "—"}</dd>
             <dt>Vencimento</dt><dd>{c.billing_day ? `dia ${c.billing_day}` : "—"}</dd>
             <dt>Início do projeto</dt><dd>{dataBR(c.project_start)}</dd>
-            <dt>Término do projeto</dt><dd>{dataBR(c.project_end)}</dd>
-            <dt>Renovação</dt><dd>{dataBR(c.renewal_date)}</dd>
-            <dt>Fim do contrato</dt><dd>{dataBR(c.contract_end)}</dd>
+            <dt>Término / renovação</dt><dd>{dataBR(c.contract_end)}</dd>
             {c.notes && (<><dt>Observações</dt><dd className="pre">{c.notes}</dd></>)}
           </dl>
         </section>
