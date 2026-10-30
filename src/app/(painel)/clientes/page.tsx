@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { supabaseServer } from "@/lib/supabase/server";
 import { alertaPrazo, mensalidadeCliente, type Cliente, type Contrato, type Valor } from "@/lib/clientes";
 import { brl, dataBR, mesAtualISO } from "@/lib/format";
+import type { ContaMidia } from "@/lib/integracoes/financeiro";
+import { AlertaSaldo } from "./alerta-saldo";
 
 export const metadata: Metadata = { title: "Clientes" };
 
@@ -17,16 +20,19 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
   const filtro = FILTROS.some((f) => f.v === s) ? s! : "ativo";
 
   const supabase = await supabaseServer();
-  const [{ data: clientes }, { data: cts }, { data: valores }] = await Promise.all([
+  const [{ data: clientes }, { data: cts }, { data: valores }, { data: cxs }] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
     supabase.from("client_services").select("id,client_id,setup_amount,setup_date,setup_method,services(name)"),
     supabase.from("client_price_versions").select("*"),
+    supabase.from("client_connections").select("client_id,platform,external_id,name").in("platform", ["meta_ads", "google_ads"]),
   ]);
   const contratos = (cts ?? []) as unknown as Contrato[];
   const todos = (clientes ?? []) as Cliente[];
   const vals = (valores ?? []) as Valor[];
   const mes = mesAtualISO();
 
+  const contasMidia = (id: string) =>
+    ((cxs ?? []) as (ContaMidia & { client_id: string })[]).filter((x) => x.client_id === id && x.external_id);
   const doCliente = (id: string) => contratos.filter((x) => x.client_id === id);
   const lista = todos.filter((c) => filtro === "todos" || c.status === filtro);
   const ativos = todos.filter((c) => c.status === "ativo");
@@ -83,6 +89,11 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                     <td>
                       <Link href={`/clientes/${c.id}`} className="strong">{c.name}</Link>
                       {alerta && <span className={`badge ${alerta.tom}`}>{alerta.texto}</span>}
+                      {c.status === "ativo" && (
+                        <Suspense fallback={null}>
+                          <AlertaSaldo contas={contasMidia(c.id)} />
+                        </Suspense>
+                      )}
                     </td>
                     <td className="muted">{cs.map((x) => x.services?.name).filter(Boolean).join(", ") || "—"}</td>
                     <td><span className={`badge ${c.status}`}>{c.status === "ativo" ? "Ativo" : "Encerrado"}</span></td>

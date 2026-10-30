@@ -1,8 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Renova a sessão e protege todas as rotas, exceto /login.
+// Renova a sessão e protege todas as rotas, exceto /login e /privacidade.
 export async function proxy(req: NextRequest) {
+  // Página pública exigida pelo Google (tela de consentimento OAuth).
+  if (req.nextUrl.pathname === "/privacidade") return NextResponse.next();
   const faltando = [
     !process.env.NEXT_PUBLIC_SUPABASE_URL && "NEXT_PUBLIC_SUPABASE_URL",
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
