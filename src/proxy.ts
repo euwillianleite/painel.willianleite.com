@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Renova a sessão e protege todas as rotas, exceto /login.
 export async function proxy(req: NextRequest) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  const faltando = [
+    !process.env.NEXT_PUBLIC_SUPABASE_URL && "NEXT_PUBLIC_SUPABASE_URL",
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ].filter(Boolean);
+  if (faltando.length) {
     return new NextResponse(
-      "Configuração incompleta: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel (Preview e Production) e faça um novo deploy.",
+      `Configuração incompleta. Faltando no build: ${faltando.join(", ")}. Defina na Vercel (Preview e Production) e faça um novo deploy.`,
       { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } },
     );
   }
