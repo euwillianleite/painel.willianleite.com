@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { addMeses, primeiroDia } from "../fluxo";
 import { hojeISO } from "../format";
 import { faltando, falha, type Conta, type MesGasto, type Resultado } from "./tipos";
+import { parseFinanceiroGoogle, type Financeiro } from "./saldo";
 
 export const GOOGLE_VARS = [
   "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET",
@@ -110,4 +111,29 @@ export const gastoMensalGoogle = unstable_cache(
   },
   ["google-gasto"],
   { revalidate: 3600, tags: ["conexao"] },
+);
+
+/** Ritmo de gasto (7 dias), gasto do mês e, quando existir, o orçamento restante da conta (só contas com orçamento aprovado). */
+export const financeiroGoogle = unstable_cache(
+  async (contaId: string): Promise<Resultado<Financeiro>> => {
+    const f = faltando(GOOGLE_VARS);
+    if (f.length) return { ok: false, erro: "Google Ads não configurado.", faltando: f };
+    try {
+      const [dias, mes, orc] = await Promise.all([
+        gaql(contaId, "SELECT customer.currency_code, metrics.cost_micros FROM customer WHERE segments.date DURING LAST_7_DAYS"),
+        gaql(contaId, "SELECT metrics.cost_micros FROM customer WHERE segments.date DURING THIS_MONTH"),
+        // Contas sem orçamento (cartão, pagamento manual) não têm essa informação pela API: segue sem saldo.
+        gaql(
+          contaId,
+          "SELECT account_budget.status, account_budget.adjusted_spending_limit_micros, account_budget.approved_spending_limit_micros, " +
+            "account_budget.amount_served_micros, account_budget.approved_end_date_time FROM account_budget",
+        ).catch(() => []),
+      ]);
+      return { ok: true, dados: parseFinanceiroGoogle(dias, mes, orc, hojeISO()) };
+    } catch (e) {
+      return falha(e);
+    }
+  },
+  ["google-financeiro"],
+  { revalidate: 600, tags: ["conexao"] },
 );

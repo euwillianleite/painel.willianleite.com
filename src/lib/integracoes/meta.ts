@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { faltando, falha, type Conta, type MesGasto, type Resultado } from "./tipos";
+import { parseFinanceiroMeta, type Financeiro } from "./saldo";
 
 export const META_VARS = ["META_ACCESS_TOKEN"];
 const versao = () => process.env.META_GRAPH_VERSION?.trim() || "v26.0";
@@ -76,4 +77,28 @@ export const gastoMensalMeta = unstable_cache(
   },
   ["meta-gasto"],
   { revalidate: 3600, tags: ["conexao"] },
+);
+
+/** Saldo, ritmo de gasto (7 dias) e gasto do mês de uma conta. Cache curto: o saldo muda ao longo do dia. */
+export const financeiroMeta = unstable_cache(
+  async (contaId: string): Promise<Resultado<Financeiro>> => {
+    const f = faltando(META_VARS);
+    if (f.length) return { ok: false, erro: "Meta não configurado.", faltando: f };
+    try {
+      const id = encodeURIComponent(contaId);
+      const [conta, dias, mes] = await Promise.all([
+        graph(`${base()}/act_${id}?fields=currency,is_prepay_account,balance,spend_cap,amount_spent,funding_source_details`),
+        graph(`${base()}/act_${id}/insights?fields=spend,account_currency&time_increment=1&date_preset=last_7d&limit=31`),
+        graph(`${base()}/act_${id}/insights?fields=spend&date_preset=this_month`),
+      ]);
+      return {
+        ok: true,
+        dados: parseFinanceiroMeta(conta as Parameters<typeof parseFinanceiroMeta>[0], (dias.data ?? []) as LinhaInsights[], (mes.data ?? []) as LinhaInsights[]),
+      };
+    } catch (e) {
+      return falha(e);
+    }
+  },
+  ["meta-financeiro"],
+  { revalidate: 600, tags: ["conexao"] },
 );
