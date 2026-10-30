@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Páginas já visitadas reabrem na hora por 30 s (voltar, trocar de aba). Salvar algo invalida o cache.
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async headers() {
     return [
       {
