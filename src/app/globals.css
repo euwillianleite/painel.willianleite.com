@@ -166,3 +166,29 @@ h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .remover form { margin-top: 8px; }
 .btn.danger { background: var(--danger); color: #fff; }
 .field.narrow { width: 110px; }
+
+/* ---- financeiro ---- */
+.neg { color: var(--danger); }
+.ok { color: #16a34a; font-weight: 550; }
+.monthnav { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.monthnav a { padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; }
+.monthnav a.muted { border: 0; }
+.chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; margin-bottom: 8px; }
+.chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; min-width: 0; }
+.chart .bars { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 3px; }
+.chart .bar { display: block; width: 40%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 2px; }
+.bar.in, .dot.in { background: var(--accent); }
+.bar.out, .dot.out { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.chart .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.legend { margin-bottom: 12px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 4px 0 10px; }
+.lanc { list-style: none; padding: 0; display: grid; gap: 0; }
+.lanc li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px 0; border-top: 1px solid var(--border); align-items: start; }
+.lanc li:first-child { border-top: 0; }
+.lanc .val { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.lanc form { grid-column: 1 / -1; }
+.lanc li.pago .val { color: var(--muted); }
+.pagar { display: flex; gap: 6px; flex-wrap: wrap; }
+.pagar input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.pagar input[name="amount"] { width: 110px; }
+.pagar .btn { padding: 6px 12px; }
