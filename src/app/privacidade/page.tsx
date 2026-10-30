@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EMPRESA } from "@/lib/empresa";
 
 export const metadata: Metadata = { title: "Política de Privacidade" };
 
@@ -7,12 +8,12 @@ export default function Privacidade() {
     <main className="login">
       <div className="card" style={{ maxWidth: 680 }}>
         <h1>Política de Privacidade</h1>
-        <p className="muted">Painel Willian Leite · painel.willianleite.com · atualizada em 30/10/2026</p>
+        <p className="muted">{[EMPRESA.nome, EMPRESA.dominio, "atualizada em 30/10/2026"].filter(Boolean).join(" · ")}</p>
 
         <h2>Quem somos</h2>
         <p>
-          O Painel Willian Leite é uma ferramenta interna de gestão, de uso exclusivo do administrador da empresa
-          (Willian Leite). Não é aberta ao público e não há cadastro de outros usuários.
+          O painel {EMPRESA.nome} é uma ferramenta interna de gestão, de uso exclusivo do administrador da empresa
+          {EMPRESA.responsavel ? ` (${EMPRESA.responsavel})` : ""}. Não é aberta ao público e não há cadastro de outros usuários.
         </p>
 
         <h2>Dados que acessamos</h2>
@@ -49,8 +50,13 @@ export default function Privacidade() {
         <h2>Seus direitos e contato</h2>
         <p>
           Para saber quais dados mantemos, corrigi-los ou excluí-los, ou para revogar o acesso do painel à sua conta Google
-          (em myaccount.google.com/permissions), fale com{" "}
-          <a href="mailto:euwillianleite@gmail.com">euwillianleite@gmail.com</a>.
+          (em myaccount.google.com/permissions), fale com o administrador
+          {EMPRESA.email ? (
+            <>
+              {" "}pelo e-mail <a href={`mailto:${EMPRESA.email}`}>{EMPRESA.email}</a>
+            </>
+          ) : null}
+          .
         </p>
       </div>
     </main>

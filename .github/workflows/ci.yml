@@ -11,6 +11,10 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      - name: Conferir supabase/setup.sql
+        run: |
+          bash scripts/gerar-setup.sh
+          git diff --exit-code supabase/setup.sql || (echo 'Rode npm run setup-sql e faça commit do supabase/setup.sql.' && exit 1)
       - run: npm run lint
       - run: npm run build
         env:

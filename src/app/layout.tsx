@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { EMPRESA } from "@/lib/empresa";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: { default: "Painel", template: "%s · Painel" },
+  title: { default: EMPRESA.nome, template: `%s · ${EMPRESA.nome}` },
   robots: { index: false, follow: false },
 };
 
