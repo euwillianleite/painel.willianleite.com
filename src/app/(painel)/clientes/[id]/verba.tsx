@@ -34,32 +34,45 @@ export async function VerbaMidia({ clientId }: { clientId: string }) {
     }),
   );
 
+  type Item = { rotulo: string; moeda: string; s: ReturnType<typeof resumirGasto> | null; erro?: string };
+  const itens: Item[] = linhas.map(({ c, r }) => {
+    const rotulo = `${c.platform === "meta_ads" ? "Meta" : "Google"} · ${c.name ?? c.external_id}`;
+    if (!r.ok) return { rotulo, moeda: "BRL", s: null, erro: r.faltando?.length ? "integração não configurada" : r.erro };
+    return { rotulo, moeda: (r.dados.moeda ?? c.currency ?? "BRL").toUpperCase(), s: resumirGasto(r.dados.meses, hoje) };
+  });
+
+  // Soma por moeda: contas em moedas diferentes nunca são somadas entre si.
+  const somar = (campo: "mesAnterior" | "media3" | "total") => {
+    const porMoeda = new Map<string, number>();
+    for (const i of itens) if (i.s) porMoeda.set(i.moeda, (porMoeda.get(i.moeda) ?? 0) + i.s[campo]);
+    return [...porMoeda.entries()].map(([m, v]) => fmt(v, m)).join(" + ") || "—";
+  };
+  const colunas = [
+    { campo: "mesAnterior", titulo: "Mês anterior" },
+    { campo: "media3", titulo: "Média 3 meses" },
+    { campo: "total", titulo: "Total" },
+  ] as const;
+
   return (
     <div className="verba-grid">
-      {linhas.map(({ c, r }) => {
-        const plataforma = c.platform === "meta_ads" ? "Meta Ads" : "Google Ads";
-        const nome = c.name ?? c.external_id;
-        if (!r.ok) {
-          return (
-            <section key={c.external_id} className="verba-col">
-              <header><span className="verba-plat">{plataforma}</span><strong>{nome}</strong></header>
-              <p className="muted small">{r.faltando?.length ? "Integração não configurada." : r.erro}</p>
-            </section>
-          );
-        }
-        const s = resumirGasto(r.dados.meses, hoje);
-        const moeda = r.dados.moeda ?? c.currency;
-        return (
-          <section key={c.external_id} className="verba-col">
-            <header><span className="verba-plat">{plataforma}</span><strong>{nome}</strong></header>
-            <dl>
-              <div><dt>Mês anterior</dt><dd>{fmt(s.mesAnterior, moeda)}</dd></div>
-              <div><dt>Média 3 meses</dt><dd>{fmt(s.media3, moeda)}</dd></div>
-              <div><dt>Total</dt><dd>{fmt(s.total, moeda)}</dd></div>
-            </dl>
-          </section>
-        );
-      })}
+      {colunas.map((col) => (
+        <section key={col.campo} className="verba-col">
+          <header><span className="verba-plat">{col.titulo}</span><strong className="verba-soma">{somar(col.campo)}</strong></header>
+          <ul className="verba-lista">
+            {itens.map((i) => (
+              <li key={i.rotulo}>
+                <span>{i.rotulo}</span>
+                {i.s ? <b>{fmt(i.s[col.campo], i.moeda)}</b> : <em title={i.erro}>—</em>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      {itens.some((i) => i.erro) && (
+        <p className="muted small" style={{ gridColumn: "1 / -1", margin: 0 }}>
+          {itens.filter((i) => i.erro).map((i) => `${i.rotulo}: ${i.erro}`).join(" · ")}
+        </p>
+      )}
     </div>
   );
 }
