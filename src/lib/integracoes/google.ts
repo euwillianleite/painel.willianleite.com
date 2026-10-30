@@ -4,7 +4,7 @@ import { hojeISO } from "../format";
 import { faltando, falha, type Conta, type MesGasto, type Resultado } from "./tipos";
 
 export const GOOGLE_VARS = [
-  "GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET",
+  "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET",
   "GOOGLE_ADS_REFRESH_TOKEN", "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
 ];
 const versao = () => process.env.GOOGLE_ADS_API_VERSION?.trim() || "v25";
@@ -38,7 +38,8 @@ async function gaql(customerId: string, query: string): Promise<Record<string, a
       method: "POST",
       headers: {
         Authorization: `Bearer ${await accessToken()}`,
-        "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN!,
+        // Opcional: desde set/2026 o acesso pertence ao projeto do Google Cloud (o cabeçalho é ignorado).
+        ...(process.env.GOOGLE_ADS_DEVELOPER_TOKEN ? { "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN } : {}),
         "login-customer-id": mcc,
         "content-type": "application/json",
       },
