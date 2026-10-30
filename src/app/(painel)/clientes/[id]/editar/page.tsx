@@ -26,7 +26,7 @@ export default async function EditarCliente({
   const c = data as Cliente;
 
   const [{ data: cts }, { data: cat }] = await Promise.all([
-    supabase.from("client_services").select("id,client_id,setup_amount,setup_month,setup_method,services(name)").eq("client_id", id).order("created_at"),
+    supabase.from("client_services").select("id,client_id,setup_amount,setup_date,setup_method,services(name)").eq("client_id", id).order("created_at"),
     supabase.from("services").select("name").order("name"),
   ]);
   const contratos = (cts ?? []) as unknown as Contrato[];
@@ -78,6 +78,7 @@ export default async function EditarCliente({
                   <input type="hidden" name="valor_id" value={v.id} />
                   <div className="field"><label>A partir de</label><input name="starts_on" type="month" defaultValue={v.starts_on.slice(0, 7)} required /></div>
                   <div className="field"><label>Valor (R$)</label><input name="amount" inputMode="decimal" defaultValue={numBR(v.amount)} required /></div>
+                  <div className="field narrow"><label>Dia do pagto</label><input name="pay_day" type="number" min={1} max={31} defaultValue={v.pay_day ?? ""} placeholder="dia" required /></div>
                   <div className="field grow"><label>Observação</label><input name="note" defaultValue={v.note ?? ""} /></div>
                   <button className="btn" formAction={editarValor}>Salvar</button>
                   <button className="link-danger" formAction={removerValor}>Apagar</button>
@@ -88,6 +89,7 @@ export default async function EditarCliente({
                 <input type="hidden" name="contrato_id" value={ct.id} />
                 <div className="field"><label>Novo valor — a partir de</label><input name="starts_on" type="month" defaultValue={mes.slice(0, 7)} required /></div>
                 <div className="field"><label>Valor (R$)</label><input name="amount" inputMode="decimal" placeholder="1.200,00" required /></div>
+                <div className="field narrow"><label>Dia do pagto</label><input name="pay_day" type="number" min={1} max={31} defaultValue={atual?.pay_day ?? ""} placeholder="dia" required /></div>
                 <div className="field grow"><label>Observação</label><input name="note" placeholder="Renegociado, desconto…" /></div>
                 <button className="btn ghost">Adicionar valor</button>
               </form>
@@ -97,7 +99,7 @@ export default async function EditarCliente({
                 <input type="hidden" name="id" value={id} />
                 <input type="hidden" name="contrato_id" value={ct.id} />
                 <div className="field"><label>Valor (R$)</label><input name="setup_amount" inputMode="decimal" placeholder="sem setup" defaultValue={ct.setup_amount ? numBR(ct.setup_amount) : ""} /></div>
-                <div className="field"><label>Mês</label><input name="setup_month" type="month" defaultValue={ct.setup_month?.slice(0, 7) ?? mes.slice(0, 7)} /></div>
+                <div className="field"><label>Data</label><input name="setup_date" type="date" defaultValue={ct.setup_date ?? ""} /></div>
                 <div className="field">
                   <label>Forma</label>
                   <select name="setup_method" defaultValue={ct.setup_method ?? ""}>

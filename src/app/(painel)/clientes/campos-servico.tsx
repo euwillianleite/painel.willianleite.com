@@ -23,8 +23,18 @@ export function CamposServico({ catalogo }: { catalogo: string[] }) {
       </div>
       <div className="row">
         <div className="field">
+          <label htmlFor="pay_day">Dia do pagamento *</label>
+          <input id="pay_day" name="pay_day" type="number" min={1} max={31} placeholder="10" required />
+        </div>
+      </div>
+      <div className="row">
+        <div className="field">
           <label htmlFor="setup_amount">Setup (R$), se houver</label>
           <input id="setup_amount" name="setup_amount" inputMode="decimal" placeholder="3.000,00" />
+        </div>
+        <div className="field">
+          <label htmlFor="setup_date">Data do setup</label>
+          <input id="setup_date" name="setup_date" type="date" />
         </div>
         <div className="field">
           <label htmlFor="setup_method">Forma do setup</label>
@@ -35,7 +45,7 @@ export function CamposServico({ catalogo }: { catalogo: string[] }) {
           </select>
         </div>
       </div>
-      <p className="muted small">O setup é cobrado no mês de início. Mudanças de valor depois entram como novo valor, na edição do cliente.</p>
+      <p className="muted small">Dia 29, 30 ou 31 em meses mais curtos cai no último dia do mês. Mudanças de valor ou de dia entram como novo valor, na edição do cliente.</p>
     </>
   );
 }

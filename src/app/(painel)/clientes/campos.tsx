@@ -17,10 +17,6 @@ export function CamposCliente({ c }: { c?: Cliente }) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="billing_day">Dia de vencimento</label>
-          <input id="billing_day" name="billing_day" type="number" min={1} max={31} defaultValue={c?.billing_day ?? ""} />
-        </div>
-        <div className="field">
           <label htmlFor="document">CNPJ / CPF</label>
           <input id="document" name="document" defaultValue={c?.document ?? ""} />
         </div>

@@ -8,19 +8,18 @@ export type Cliente = {
   contact_phone: string | null;
   contact_email: string | null;
   status: "ativo" | "encerrado";
-  billing_day: number | null;
   project_start: string | null;
   contract_end: string | null; // término / renovação do contrato
   notes: string | null;
 };
 export type Link = { id: string; label: string; url: string };
-export type Valor = { id: string; client_service_id: string; starts_on: string; amount: number; note: string | null };
+export type Valor = { id: string; client_service_id: string; starts_on: string; amount: number; pay_day: number | null; note: string | null };
 /** Serviço vinculado ao cliente (com setup opcional). */
 export type Contrato = {
   id: string;
   client_id: string;
   setup_amount: number | null;
-  setup_month: string | null;
+  setup_date: string | null;
   setup_method: "pix" | "cartao" | null;
   services: { name: string } | null;
 };

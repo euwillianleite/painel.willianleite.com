@@ -42,3 +42,10 @@ export function parseBRL(texto: string): number | null {
 
 /** 1500 -> "1500,00" (para preencher campos de formulário) */
 export const numBR = (n: number) => n.toFixed(2).replace(".", ",");
+
+/** Data de pagamento em um mês: dia pedido, limitado ao último dia do mês (31 em fevereiro -> 28/29). */
+export function dataNoMes(mesISO: string, dia: number): string {
+  const [y, m] = mesISO.split("-").map(Number);
+  const ultimo = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return `${mesISO.slice(0, 7)}-${String(Math.min(dia, ultimo)).padStart(2, "0")}`;
+}

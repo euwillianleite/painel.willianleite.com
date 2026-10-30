@@ -19,7 +19,7 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
   const supabase = await supabaseServer();
   const [{ data: clientes }, { data: cts }, { data: valores }] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
-    supabase.from("client_services").select("id,client_id,setup_amount,setup_month,setup_method,services(name)"),
+    supabase.from("client_services").select("id,client_id,setup_amount,setup_date,setup_method,services(name)"),
     supabase.from("client_price_versions").select("*"),
   ]);
   const contratos = (cts ?? []) as unknown as Contrato[];

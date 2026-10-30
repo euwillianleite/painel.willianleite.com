@@ -74,7 +74,6 @@ export default async function Ficha({
             <dt>Serviços</dt><dd>{servicos || "—"}</dd>
             <dt>Contato</dt><dd>{[c.contact_name, c.contact_phone, c.contact_email].filter(Boolean).join(" · ") || "—"}</dd>
             <dt>CNPJ / CPF</dt><dd>{c.document || "—"}</dd>
-            <dt>Vencimento</dt><dd>{c.billing_day ? `dia ${c.billing_day}` : "—"}</dd>
             <dt>Início do projeto</dt><dd>{dataBR(c.project_start)}</dd>
             <dt>Término / renovação</dt><dd>{dataBR(c.contract_end)}</dd>
             {c.notes && (<><dt>Observações</dt><dd className="pre">{c.notes}</dd></>)}
