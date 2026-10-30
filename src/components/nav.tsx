@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const itens = [
   { href: "/clientes", label: "Clientes" },
   { href: "/financeiro", label: "Financeiro" },
+  { href: "/conexao", label: "Conexão" },
 ];
 
 export function Nav() {

@@ -1,12 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { alertaPrazo, type Cliente, type Link as LinkT } from "@/lib/clientes";
 import { dataBR } from "@/lib/format";
 import { adicionarLink, removerLink } from "../actions";
+import { VerbaMidia } from "./verba";
 
 export const metadata: Metadata = { title: "Ficha do cliente" };
+
+const ROTULO_CURTO: Record<string, string> = {
+  meta_ads: "Meta Ads", google_ads: "Google Ads", whatsapp_group: "WhatsApp", gmb: "Meu Negócio", hotjar: "Hotjar", analytics: "Analytics",
+};
+/** Link direto para a conta na plataforma (ou o link cadastrado à mão). */
+function urlConexao(x: { platform: string; external_id: string | null; url: string | null }) {
+  if (x.url) return x.url;
+  const id = encodeURIComponent(x.external_id ?? "");
+  if (x.platform === "meta_ads") return `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${id}`;
+  if (x.platform === "google_ads") return `https://ads.google.com/aw/overview?__e=${id}`;
+  return null;
+}
 
 export default async function Ficha({
   params,
@@ -17,10 +31,11 @@ export default async function Ficha({
 }) {
   const [{ id }, { erro }] = await Promise.all([params, searchParams]);
   const supabase = await supabaseServer();
-  const [{ data: cli }, { data: links }, { data: cts }] = await Promise.all([
+  const [{ data: cli }, { data: links }, { data: cts }, { data: cxs }] = await Promise.all([
     supabase.from("clients").select("*").eq("id", id).maybeSingle(),
     supabase.from("client_links").select("id,label,url").eq("client_id", id).order("created_at"),
     supabase.from("client_services").select("services(name)").eq("client_id", id).order("created_at"),
+    supabase.from("client_connections").select("id,platform,external_id,name,url").eq("client_id", id).order("created_at"),
   ]);
   if (!cli) notFound();
   const c = cli as Cliente;
@@ -29,6 +44,8 @@ export default async function Ficha({
     .map((x) => x.services?.name)
     .filter(Boolean)
     .join(", ");
+  const conectados = ((cxs ?? []) as { id: string; platform: string; external_id: string | null; name: string | null; url: string | null }[])
+    .map((x) => ({ id: x.id, label: `${ROTULO_CURTO[x.platform] ?? x.platform}${x.name ? ` · ${x.name}` : ""}`, url: urlConexao(x) }));
   const alerta = alertaPrazo(c);
 
   return (
@@ -45,6 +62,17 @@ export default async function Ficha({
 
       <section className="card">
         <h2>Links</h2>
+        {conectados.length > 0 && (
+          <div className="links">
+            {conectados.map((x) =>
+              x.url ? (
+                <div key={x.id} className="linkbtn conectado"><a href={x.url} target="_blank" rel="noopener noreferrer">{x.label}</a></div>
+              ) : (
+                <div key={x.id} className="linkbtn conectado"><span>{x.label}</span></div>
+              ),
+            )}
+          </div>
+        )}
         {ls.length > 0 && (
           <div className="links">
             {ls.map((l) => (
@@ -82,10 +110,9 @@ export default async function Ficha({
 
         <section className="card">
           <h2>Verba de mídia</h2>
-          <p className="muted">
-            Último mês, média dos últimos 3 meses e total gasto serão puxados direto do Meta Ads e do Google Ads
-            quando as contas forem conectadas (tela de Conexão).
-          </p>
+          <Suspense fallback={<p className="muted">Carregando…</p>}>
+            <VerbaMidia clientId={id} />
+          </Suspense>
         </section>
       </div>
 

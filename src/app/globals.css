@@ -192,3 +192,14 @@ h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .pagar input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; min-width: 0; }
 .pagar input[name="amount"] { width: 110px; }
 .pagar .btn { padding: 6px 12px; }
+
+/* ---- conexão ---- */
+.dot.on, .dot.off { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin: 0 0 1px 6px; }
+.dot.on { background: #16a34a; }
+.dot.off { background: color-mix(in srgb, var(--muted) 60%, transparent); }
+.inlinef { display: flex; align-items: center; gap: 8px; }
+.inlinef select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; max-width: 220px; font: inherit; color: inherit; }
+.vars { margin: 8px 0 12px 18px; }
+.vars code, td code { font-size: 12px; background: color-mix(in srgb, var(--text) 7%, transparent); padding: 1px 6px; border-radius: 5px; }
+.linkbtn.conectado { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.linkbtn span { padding: 7px 12px; font-weight: 550; color: var(--muted); }
