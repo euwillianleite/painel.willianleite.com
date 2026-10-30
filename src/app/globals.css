@@ -38,7 +38,7 @@ h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; }
 .muted { color: var(--muted); }
 
 /* shell */
-.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100dvh; }
+.shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100dvh; }
 .side {
   border-right: 1px solid var(--border);
   padding: 20px 12px;
@@ -52,7 +52,7 @@ h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; }
 .nav a:hover { background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); }
 .nav a[aria-current="page"] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--text); font-weight: 550; }
 .spacer { flex: 1; }
-.main { padding: 32px clamp(16px, 4vw, 48px); max-width: 1200px; width: 100%; }
+.main { padding: 32px clamp(16px, 3vw, 40px); width: 100%; min-width: 0; }
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 20px;
