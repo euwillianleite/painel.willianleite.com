@@ -203,3 +203,8 @@ h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .vars code, td code { font-size: 12px; background: color-mix(in srgb, var(--text) 7%, transparent); padding: 1px 6px; border-radius: 5px; }
 .linkbtn.conectado { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .linkbtn span { padding: 7px 12px; font-weight: 550; color: var(--muted); }
+.filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.filtros input[type="search"] { flex: 1 1 240px; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font: inherit; color: inherit; }
+.filtros select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 8px; font: inherit; color: inherit; }
+.inlinef select { max-width: 170px; min-width: 0; }
+.inlinef .btn, .inlinef .link-danger { white-space: nowrap; flex-shrink: 0; }

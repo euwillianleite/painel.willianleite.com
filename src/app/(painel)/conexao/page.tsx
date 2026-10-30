@@ -10,6 +10,7 @@ import { adicionarManual, atualizarLista, desvincular, vincular } from "./action
 export const metadata: Metadata = { title: "Conexão" };
 
 type Conexao = { id: string; client_id: string; platform: Plataforma; external_id: string | null; name: string | null; url: string | null };
+type Filtro = { q: string; v: "todos" | "com" | "sem" };
 type CliLeve = { id: string; name: string; status: string };
 
 const ABAS = [
@@ -18,15 +19,37 @@ const ABAS = [
   { v: "whatsapp", r: "WhatsApp (Z-API)", vars: ZAPI_VARS },
   { v: "outros", r: "Outros", vars: [] as string[] },
 ] as const;
+/** Minúsculas e sem acento, para a busca por nome. */
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+function Filtros({ aba, filtro, mostrarVinculo = true }: { aba: string; filtro: Filtro; mostrarVinculo?: boolean }) {
+  const ativo = filtro.q !== "" || filtro.v !== "todos";
+  return (
+    <form method="get" action="/conexao" className="filtros" role="search">
+      <input type="hidden" name="aba" value={aba} />
+      <input type="search" name="q" defaultValue={filtro.q} placeholder="Buscar por nome, ID ou cliente…" aria-label="Buscar" />
+      {mostrarVinculo && (
+        <select name="v" defaultValue={filtro.v} aria-label="Situação do vínculo">
+          <option value="todos">Todos</option>
+          <option value="sem">Não vinculados</option>
+          <option value="com">Vinculados</option>
+        </select>
+      )}
+      <button className="btn ghost">Filtrar</button>
+      {ativo && <Link href={`/conexao?aba=${aba}`} className="muted small">Limpar</Link>}
+    </form>
+  );
+}
 const PLAT: Record<string, Plataforma> = { meta: "meta_ads", google: "google_ads", whatsapp: "whatsapp_group" };
 export const ROTULO: Record<Plataforma, string> = {
   meta_ads: "Meta Ads", google_ads: "Google Ads", whatsapp_group: "Grupo de WhatsApp",
   gmb: "Google Meu Negócio", hotjar: "Hotjar", analytics: "Google Analytics",
 };
 
-export default async function Conexao({ searchParams }: { searchParams: Promise<{ aba?: string; erro?: string }> }) {
+export default async function Conexao({ searchParams }: { searchParams: Promise<{ aba?: string; erro?: string; q?: string; v?: string }> }) {
   const sp = await searchParams;
   const aba = ABAS.find((a) => a.v === sp.aba) ?? ABAS[0];
+  const filtro: Filtro = { q: (sp.q ?? "").slice(0, 80), v: sp.v === "com" || sp.v === "sem" ? sp.v : "todos" };
 
   const supabase = await supabaseServer();
   const [{ data: cl }, { data: cx }] = await Promise.all([
@@ -63,7 +86,7 @@ export default async function Conexao({ searchParams }: { searchParams: Promise<
       {sp.erro && <p className="error" role="alert">{sp.erro}</p>}
 
       {aba.v === "outros" ? (
-        <Outros clientes={clientes} conexoes={conexoes} />
+        <Outros clientes={clientes} conexoes={conexoes} filtro={filtro} />
       ) : (
         <section className="card">
           <div className="toolbar" style={{ marginBottom: 12 }}>
@@ -78,14 +101,14 @@ export default async function Conexao({ searchParams }: { searchParams: Promise<
               <button className="btn ghost">Atualizar lista</button>
             </form>
           </div>
-          <Conteudo aba={aba.v} lista={lista!} clientes={clientes} conexoes={conexoes} />
+          <Conteudo aba={aba.v} lista={lista!} clientes={clientes} conexoes={conexoes} filtro={filtro} />
         </section>
       )}
     </>
   );
 }
 
-function Conteudo({ aba, lista, clientes, conexoes }: { aba: string; lista: Resultado<Conta[]>; clientes: CliLeve[]; conexoes: Conexao[] }) {
+function Conteudo({ aba, lista, clientes, conexoes, filtro }: { aba: string; lista: Resultado<Conta[]>; clientes: CliLeve[]; conexoes: Conexao[]; filtro: Filtro }) {
   if (!lista.ok) {
     return lista.faltando?.length ? (
       <div>
@@ -102,12 +125,29 @@ function Conteudo({ aba, lista, clientes, conexoes }: { aba: string; lista: Resu
   const nomeCliente = (id: string) => clientes.find((c) => c.id === id)?.name ?? "—";
   if (lista.dados.length === 0) return <p className="muted">Nenhum item encontrado nesta conta.</p>;
 
+  const busca = norm(filtro.q);
+  const itens = lista.dados.filter((c) => {
+    const v = vinculos.get(c.id);
+    if (filtro.v === "com" && !v) return false;
+    if (filtro.v === "sem" && v) return false;
+    if (!busca) return true;
+    return norm(`${c.nome} ${c.id} ${v ? nomeCliente(v.client_id) : ""}`).includes(busca);
+  });
+  const totalVinc = lista.dados.filter((c) => vinculos.has(c.id)).length;
+
   return (
+    <>
+    <Filtros aba={aba} filtro={filtro} />
+    <p className="muted small" style={{ margin: "0 0 8px" }}>
+      {itens.length} de {lista.dados.length} · {totalVinc} vinculados · {lista.dados.length - totalVinc} sem vínculo
+    </p>
+    {itens.length === 0 && <p className="muted">Nada encontrado com esse filtro.</p>}
+    {itens.length > 0 && (
     <div className="table-wrap">
       <table>
         <thead><tr><th>Nome</th><th>ID</th><th>Situação</th><th>Cliente</th></tr></thead>
         <tbody>
-          {lista.dados.map((c) => {
+          {itens.map((c) => {
             const v = vinculos.get(c.id);
             return (
               <tr key={c.id}>
@@ -118,6 +158,8 @@ function Conteudo({ aba, lista, clientes, conexoes }: { aba: string; lista: Resu
                   {v ? (
                     <form action={desvincular} className="inlinef">
                       <input type="hidden" name="aba" value={aba} />
+                      <input type="hidden" name="q" value={filtro.q} />
+                      <input type="hidden" name="v" value={filtro.v} />
                       <input type="hidden" name="id" value={v.id} />
                       <Link href={`/clientes/${v.client_id}`} className="strong">{nomeCliente(v.client_id)}</Link>
                       <button className="link-danger">Desvincular</button>
@@ -125,6 +167,8 @@ function Conteudo({ aba, lista, clientes, conexoes }: { aba: string; lista: Resu
                   ) : (
                     <form action={vincular} className="inlinef">
                       <input type="hidden" name="aba" value={aba} />
+                      <input type="hidden" name="q" value={filtro.q} />
+                      <input type="hidden" name="v" value={filtro.v} />
                       <input type="hidden" name="platform" value={plataforma} />
                       <input type="hidden" name="external_id" value={c.id} />
                       <input type="hidden" name="name" value={c.nome} />
@@ -143,12 +187,18 @@ function Conteudo({ aba, lista, clientes, conexoes }: { aba: string; lista: Resu
         </tbody>
       </table>
     </div>
+    )}
+    </>
   );
 }
 
-function Outros({ clientes, conexoes }: { clientes: CliLeve[]; conexoes: Conexao[] }) {
-  const manuais = conexoes.filter((c) => ["gmb", "hotjar", "analytics"].includes(c.platform));
+function Outros({ clientes, conexoes, filtro }: { clientes: CliLeve[]; conexoes: Conexao[]; filtro: Filtro }) {
   const nomeCliente = (id: string) => clientes.find((c) => c.id === id)?.name ?? "—";
+  const todosManuais = conexoes.filter((c) => ["gmb", "hotjar", "analytics"].includes(c.platform));
+  const busca = norm(filtro.q);
+  const manuais = todosManuais.filter(
+    (m) => !busca || norm(`${m.name ?? ""} ${nomeCliente(m.client_id)} ${ROTULO[m.platform]} ${m.external_id ?? ""}`).includes(busca),
+  );
   return (
     <>
       <section className="card form" style={{ marginBottom: 16 }}>
@@ -183,6 +233,12 @@ function Outros({ clientes, conexoes }: { clientes: CliLeve[]; conexoes: Conexao
         </form>
       </section>
 
+      {todosManuais.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <Filtros aba="outros" filtro={filtro} mostrarVinculo={false} />
+          {manuais.length === 0 && <p className="muted">Nada encontrado com esse filtro.</p>}
+        </div>
+      )}
       {manuais.length > 0 && (
         <div className="card table-wrap">
           <table>

@@ -10,19 +10,28 @@ const API = ["meta_ads", "google_ads", "whatsapp_group"] as const;
 const MANUAL = ["gmb", "hotjar", "analytics"] as const;
 const motivo = (e: { code?: string; message?: string } | null) =>
   e ? ` (${[e.code, e.message].filter(Boolean).join(": ")})` : "";
-const volta = (aba: string, erro?: string): never => {
-  const q = new URLSearchParams({ aba });
-  if (erro) q.set("erro", erro);
-  redirect(`/conexao?${q}`);
+// Mantém a busca e o filtro ao vincular/desvincular, para seguir trabalhando na mesma lista.
+const criarVolta = (f: FormData) => {
+  const q = txt(f, "q")?.slice(0, 80);
+  const v = txt(f, "v");
+  return (aba: string, erro?: string): never => {
+    const p = new URLSearchParams({ aba });
+    if (q) p.set("q", q);
+    if (v === "com" || v === "sem") p.set("v", v);
+    if (erro) p.set("erro", erro);
+    redirect(`/conexao?${p}`);
+  };
 };
 const abaDe = (f: FormData) => txt(f, "aba") ?? "meta";
 
 export async function atualizarLista(f: FormData) {
+  const volta = criarVolta(f);
   updateTag("conexao");
   volta(abaDe(f));
 }
 
 export async function vincular(f: FormData) {
+  const volta = criarVolta(f);
   const aba = abaDe(f);
   const clientId = txt(f, "client_id");
   const plataforma = API.find((p) => p === txt(f, "platform"));
@@ -41,6 +50,7 @@ export async function vincular(f: FormData) {
 }
 
 export async function desvincular(f: FormData) {
+  const volta = criarVolta(f);
   const aba = abaDe(f);
   const id = txt(f, "id");
   if (!id || !UUID.test(id)) volta(aba, "Vínculo inválido.");
@@ -52,6 +62,7 @@ export async function desvincular(f: FormData) {
 }
 
 export async function adicionarManual(f: FormData) {
+  const volta = criarVolta(new FormData());
   const clientId = txt(f, "client_id");
   const plataforma = MANUAL.find((p) => p === txt(f, "platform"));
   let url = txt(f, "url");
