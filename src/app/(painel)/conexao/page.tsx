@@ -5,7 +5,7 @@ import { faltando, type Conta, type Plataforma, type Resultado } from "@/lib/int
 import { listarContasMeta, META_VARS } from "@/lib/integracoes/meta";
 import { GOOGLE_VARS, listarContasGoogle } from "@/lib/integracoes/google";
 import { listarGruposZapi, statusZapi, ZAPI_VARS } from "@/lib/integracoes/zapi";
-import { adicionarManual, atualizarLista, desvincular, vincular } from "./actions";
+import { adicionarManual, atualizarLista, desvincular, renomearConta, vincular } from "./actions";
 
 export const metadata: Metadata = { title: "Conexão" };
 
@@ -46,7 +46,7 @@ export const ROTULO: Record<Plataforma, string> = {
   gmb: "Google Meu Negócio", hotjar: "Hotjar", analytics: "Google Analytics",
 };
 
-export default async function Conexao({ searchParams }: { searchParams: Promise<{ aba?: string; erro?: string; q?: string; v?: string }> }) {
+export default async function Conexao({ searchParams }: { searchParams: Promise<{ aba?: string; erro?: string; ok?: string; q?: string; v?: string }> }) {
   const sp = await searchParams;
   const aba = ABAS.find((a) => a.v === sp.aba) ?? ABAS[0];
   const filtro: Filtro = { q: (sp.q ?? "").slice(0, 80), v: sp.v === "com" || sp.v === "sem" ? sp.v : "todos" };
@@ -84,6 +84,7 @@ export default async function Conexao({ searchParams }: { searchParams: Promise<
         })}
       </div>
       {sp.erro && <p className="error" role="alert">{sp.erro}</p>}
+      {sp.ok && <p className="ok" role="status">{sp.ok}</p>}
 
       {aba.v === "outros" ? (
         <Outros clientes={clientes} conexoes={conexoes} filtro={filtro} />
@@ -151,7 +152,24 @@ function Conteudo({ aba, lista, clientes, conexoes, filtro }: { aba: string; lis
             const v = vinculos.get(c.id);
             return (
               <tr key={c.id}>
-                <td className="strong">{c.nome}</td>
+                <td>
+                  <span className="strong">{c.nome}</span>
+                  {(aba === "meta" || aba === "google") && (
+                    <details className="renomear">
+                      <summary>Renomear</summary>
+                      <form action={renomearConta} className="inlinef">
+                        <input type="hidden" name="aba" value={aba} />
+                        <input type="hidden" name="q" value={filtro.q} />
+                        <input type="hidden" name="v" value={filtro.v} />
+                        <input type="hidden" name="platform" value={plataforma} />
+                        <input type="hidden" name="external_id" value={c.id} />
+                        <input name="nome" defaultValue={c.nome} maxLength={100} required aria-label={`Novo nome de ${c.nome}`} />
+                        <button className="btn ghost">Salvar na plataforma</button>
+                      </form>
+                      <p className="muted small">Altera o nome da conta dentro do {aba === "meta" ? "Meta" : "Google Ads"}, não só aqui.</p>
+                    </details>
+                  )}
+                </td>
                 <td className="muted"><code>{c.id}</code></td>
                 <td className="muted">{[c.detalhe, c.moeda].filter(Boolean).join(" · ") || "—"}</td>
                 <td>

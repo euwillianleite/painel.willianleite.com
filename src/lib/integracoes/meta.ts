@@ -102,3 +102,22 @@ export const financeiroMeta = unstable_cache(
   ["meta-financeiro"],
   { revalidate: 600, tags: ["conexao"] },
 );
+
+/** Altera o nome da conta de anúncio na Meta (exige permissão de gerenciamento de anúncios no token). */
+export async function renomearContaMeta(contaId: string, nome: string): Promise<Resultado<null>> {
+  const f = faltando(META_VARS);
+  if (f.length) return { ok: false, erro: "Meta não configurado.", faltando: f };
+  try {
+    const r = await fetch(`${base()}/act_${encodeURIComponent(contaId)}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.META_ACCESS_TOKEN}`, "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ name: nome }),
+      cache: "no-store",
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j?.error || j?.success === false) throw new Error(`Meta: ${j?.error?.error_user_msg ?? j?.error?.message ?? `HTTP ${r.status}`}`);
+    return { ok: true, dados: null };
+  } catch (e) {
+    return falha(e);
+  }
+}

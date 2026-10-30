@@ -230,3 +230,11 @@ h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .saldo-lista li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .saldo-lista li strong { font-size: 14px; overflow-wrap: anywhere; }
 .saldo-lista .badge { margin-left: 0; flex-shrink: 0; }
+.ok { color: #16a34a; font-size: 14px; margin-bottom: 12px; }
+.renomear { margin-top: 4px; }
+.renomear summary { cursor: pointer; font-size: 12px; color: var(--muted); list-style: none; }
+.renomear summary::-webkit-details-marker { display: none; }
+.renomear summary:hover { color: var(--text); text-decoration: underline; }
+.renomear form { margin-top: 6px; }
+.renomear input[name="nome"] { flex: 1 1 200px; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font: inherit; color: inherit; }
+.renomear p { margin: 4px 0 0; }

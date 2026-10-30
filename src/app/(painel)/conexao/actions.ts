@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
+import { renomearContaMeta } from "@/lib/integracoes/meta";
+import { renomearContaGoogle } from "@/lib/integracoes/google";
 
 const txt = (f: FormData, k: string) => String(f.get(k) ?? "").trim() || null;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -14,8 +16,9 @@ const motivo = (e: { code?: string; message?: string } | null) =>
 const criarVolta = (f: FormData) => {
   const q = txt(f, "q")?.slice(0, 80);
   const v = txt(f, "v");
-  return (aba: string, erro?: string): never => {
+  return (aba: string, erro?: string, ok?: string): never => {
     const p = new URLSearchParams({ aba });
+    if (ok) p.set("ok", ok);
     if (q) p.set("q", q);
     if (v === "com" || v === "sem") p.set("v", v);
     if (erro) p.set("erro", erro);
@@ -84,4 +87,26 @@ export async function adicionarManual(f: FormData) {
   if (error) volta("outros", `Não foi possível salvar.${motivo(error)}`);
   revalidatePath("/conexao");
   volta("outros");
+}
+
+/** Renomeia a conta na plataforma (Meta ou Google) e atualiza o nome guardado no painel. */
+export async function renomearConta(f: FormData) {
+  const volta = criarVolta(f);
+  const aba = abaDe(f);
+  const plataforma = API.find((p) => p === txt(f, "platform"));
+  const externo = txt(f, "external_id");
+  const nome = txt(f, "nome")?.replace(/\s+/g, " ").slice(0, 100);
+  if (plataforma !== "meta_ads" && plataforma !== "google_ads") volta(aba, "Só dá para renomear contas do Meta e do Google.");
+  if (!externo || !/^\d{5,20}$/.test(externo)) volta(aba, "Conta inválida.");
+  if (!nome) volta(aba, "Informe o novo nome.");
+
+  const r = plataforma === "meta_ads" ? await renomearContaMeta(externo!, nome!) : await renomearContaGoogle(externo!, nome!);
+  if (!r.ok) volta(aba, `Não foi possível renomear na plataforma. ${r.faltando?.length ? "Integração não configurada." : r.erro}`);
+
+  const supabase = await supabaseServer();
+  await supabase.from("client_connections").update({ name: nome }).eq("platform", plataforma!).eq("external_id", externo!);
+  updateTag("conexao");
+  revalidatePath("/conexao");
+  revalidatePath("/clientes", "layout");
+  volta(aba, undefined, `Conta renomeada para "${nome}".`);
 }

@@ -137,3 +137,28 @@ export const financeiroGoogle = unstable_cache(
   ["google-financeiro"],
   { revalidate: 600, tags: ["conexao"] },
 );
+
+/** Altera o nome descritivo da conta no Google Ads (CustomerService.MutateCustomer, via MCC). */
+export async function renomearContaGoogle(contaId: string, nome: string): Promise<Resultado<null>> {
+  const f = faltando(GOOGLE_VARS);
+  if (f.length) return { ok: false, erro: "Google Ads não configurado.", faltando: f };
+  try {
+    const id = soDigitos(contaId);
+    const r = await fetch(`https://googleads.googleapis.com/${versao()}/customers/${id}:mutate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await accessToken()}`,
+        ...(process.env.GOOGLE_ADS_DEVELOPER_TOKEN ? { "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN } : {}),
+        "login-customer-id": soDigitos(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID!),
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ operation: { updateMask: "descriptive_name", update: { resourceName: `customers/${id}`, descriptiveName: nome } } }),
+      cache: "no-store",
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(`Google Ads: ${j?.error?.details?.[0]?.errors?.[0]?.message ?? j?.error?.message ?? `HTTP ${r.status}`}`);
+    return { ok: true, dados: null };
+  } catch (e) {
+    return falha(e);
+  }
+}
