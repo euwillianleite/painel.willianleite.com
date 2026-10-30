@@ -81,7 +81,7 @@ h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; }
 .login p { margin-bottom: 20px; }
 
 @media (max-width: 760px) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
   .side {
     position: static; height: auto; flex-direction: row; align-items: center;
     overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border);
