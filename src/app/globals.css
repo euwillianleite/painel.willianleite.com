@@ -230,3 +230,6 @@ h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .saldo-lista li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .saldo-lista li strong { font-size: 14px; overflow-wrap: anywhere; }
 .saldo-lista .badge { margin-left: 0; flex-shrink: 0; }
+.skel { background: color-mix(in srgb, var(--text) 8%, transparent); border-radius: 8px; animation: skel 1.2s ease-in-out infinite alternate; }
+@keyframes skel { from { opacity: .45; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }

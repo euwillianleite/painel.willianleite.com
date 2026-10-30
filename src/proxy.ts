@@ -32,7 +32,9 @@ export async function proxy(req: NextRequest) {
     },
   );
 
+  const t0 = performance.now();
   const { data } = await supabase.auth.getClaims();
+  const authMs = Math.round(performance.now() - t0);
   const logado = !!data?.claims;
   const noLogin = req.nextUrl.pathname === "/login";
 
@@ -47,6 +49,8 @@ export async function proxy(req: NextRequest) {
     url.pathname = "/clientes";
     return NextResponse.redirect(url);
   }
+  // Tempo da checagem de login, visível nas ferramentas do navegador (aba Rede > Timing).
+  res.headers.set("Server-Timing", `auth;dur=${authMs}`);
   return res;
 }
 
