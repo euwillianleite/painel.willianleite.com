@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Renova a sessão e protege todas as rotas, exceto /login.
 export async function proxy(req: NextRequest) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return new NextResponse(
+      "Configuração incompleta: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel (Preview e Production) e faça um novo deploy.",
+      { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } },
+    );
+  }
   let res = NextResponse.next({ request: req });
 
   const supabase = createServerClient(
