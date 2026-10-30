@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { menuExtra } from "@/custom/menu";
 
 const itens = [
   { href: "/clientes", label: "Clientes" },
   { href: "/financeiro", label: "Financeiro" },
   { href: "/conexao", label: "Conexão" },
+  ...menuExtra,
 ];
 
 export function Nav() {
