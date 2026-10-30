@@ -7,7 +7,6 @@ export type Cliente = {
   contact_name: string | null;
   contact_phone: string | null;
   contact_email: string | null;
-  services: string | null;
   status: "ativo" | "encerrado";
   billing_day: number | null;
   project_start: string | null;
@@ -15,7 +14,16 @@ export type Cliente = {
   notes: string | null;
 };
 export type Link = { id: string; label: string; url: string };
-export type Valor = { id: string; client_id: string; starts_on: string; amount: number; note: string | null };
+export type Valor = { id: string; client_service_id: string; starts_on: string; amount: number; note: string | null };
+/** Serviço vinculado ao cliente (com setup opcional). */
+export type Contrato = {
+  id: string;
+  client_id: string;
+  setup_amount: number | null;
+  setup_month: string | null;
+  setup_method: "pix" | "cartao" | null;
+  services: { name: string } | null;
+};
 
 /** Valor vigente no mês: o mais recente com starts_on <= mês. */
 export function valorVigente(valores: Valor[], mes: string): Valor | null {
@@ -36,4 +44,12 @@ export function alertaPrazo(c: Pick<Cliente, "status" | "contract_end">): Alerta
   if (dias < 0) return { texto: `Renovação vencida há ${-dias} d`, tom: "perigo" };
   if (dias === 0) return { texto: "Renova hoje", tom: "perigo" };
   return { texto: `Renova em ${dias} d`, tom: "aviso" };
+}
+
+/** Soma das mensalidades vigentes no mês, de todos os serviços do cliente. */
+export function mensalidadeCliente(contratos: Contrato[], valores: Valor[], mes: string): number {
+  return contratos.reduce((t, ct) => {
+    const v = valorVigente(valores.filter((x) => x.client_service_id === ct.id), mes);
+    return t + (v?.amount ?? 0);
+  }, 0);
 }

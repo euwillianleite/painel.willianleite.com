@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { alertaPrazo, valorVigente, type Cliente, type Valor } from "@/lib/clientes";
+import { alertaPrazo, mensalidadeCliente, type Cliente, type Contrato, type Valor } from "@/lib/clientes";
 import { brl, dataBR, mesAtualISO } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Clientes" };
@@ -17,18 +17,20 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
   const filtro = FILTROS.some((f) => f.v === s) ? s! : "ativo";
 
   const supabase = await supabaseServer();
-  const [{ data: clientes }, { data: valores }] = await Promise.all([
+  const [{ data: clientes }, { data: cts }, { data: valores }] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
+    supabase.from("client_services").select("id,client_id,setup_amount,setup_month,setup_method,services(name)"),
     supabase.from("client_price_versions").select("*"),
   ]);
+  const contratos = (cts ?? []) as unknown as Contrato[];
   const todos = (clientes ?? []) as Cliente[];
   const vals = (valores ?? []) as Valor[];
   const mes = mesAtualISO();
 
-  const porCliente = (id: string) => vals.filter((v) => v.client_id === id);
+  const doCliente = (id: string) => contratos.filter((x) => x.client_id === id);
   const lista = todos.filter((c) => filtro === "todos" || c.status === filtro);
   const ativos = todos.filter((c) => c.status === "ativo");
-  const mrr = ativos.reduce((t, c) => t + (valorVigente(porCliente(c.id), mes)?.amount ?? 0), 0);
+  const mrr = ativos.reduce((t, c) => t + mensalidadeCliente(doCliente(c.id), vals, mes), 0);
 
   return (
     <>
@@ -64,6 +66,7 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
             <thead>
               <tr>
                 <th>Cliente</th>
+                <th>Serviços</th>
                 <th>Status</th>
                 <th className="num">Mensalidade</th>
                 <th>Início</th>
@@ -72,7 +75,8 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
             </thead>
             <tbody>
               {lista.map((c) => {
-                const v = valorVigente(porCliente(c.id), mes);
+                const cs = doCliente(c.id);
+                const total = mensalidadeCliente(cs, vals, mes);
                 const alerta = alertaPrazo(c);
                 return (
                   <tr key={c.id}>
@@ -80,8 +84,9 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                       <Link href={`/clientes/${c.id}`} className="strong">{c.name}</Link>
                       {alerta && <span className={`badge ${alerta.tom}`}>{alerta.texto}</span>}
                     </td>
+                    <td className="muted">{cs.map((x) => x.services?.name).filter(Boolean).join(", ") || "—"}</td>
                     <td><span className={`badge ${c.status}`}>{c.status === "ativo" ? "Ativo" : "Encerrado"}</span></td>
-                    <td className="num">{v ? brl(v.amount) : "—"}</td>
+                    <td className="num">{cs.length ? brl(total) : "—"}</td>
                     <td>{dataBR(c.project_start)}</td>
                     <td>{dataBR(c.contract_end)}</td>
                   </tr>

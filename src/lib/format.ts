@@ -39,3 +39,6 @@ export function parseBRL(texto: string): number | null {
   const n = Number(s);
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
 }
+
+/** 1500 -> "1500,00" (para preencher campos de formulário) */
+export const numBR = (n: number) => n.toFixed(2).replace(".", ",");

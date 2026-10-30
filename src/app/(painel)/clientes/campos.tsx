@@ -39,10 +39,6 @@ export function CamposCliente({ c }: { c?: Cliente }) {
           <input id="contact_email" name="contact_email" type="email" defaultValue={c?.contact_email ?? ""} />
         </div>
       </div>
-      <div className="field">
-        <label htmlFor="services">Serviços contratados</label>
-        <input id="services" name="services" defaultValue={c?.services ?? ""} />
-      </div>
       <div className="row">
         <div className="field">
           <label htmlFor="project_start">Início do projeto</label>
